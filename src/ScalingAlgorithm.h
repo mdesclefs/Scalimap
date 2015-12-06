@@ -19,7 +19,8 @@ public:
 	ScalingAlgorithm(Image * const image);
 	virtual ~ScalingAlgorithm();
 
-	virtual void algorithm(float factor) = 0;
+	void algorithm(float factor);
+	virtual void chooseMethod(std::vector<std::vector<Pixel>>*& matrix, float factor, int x, int y) = 0;
 	void run(float factor);
 };
 

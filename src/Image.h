@@ -28,12 +28,13 @@ public:
 	void printMatrix();
 
 	Pixel getPixel(int x, int y);
+	bool isInMatrix(int x, int y);
 
 	void setMatrix(std::vector<std::vector<Pixel>>*& matrix);
 	std::vector<std::vector<Pixel>> getMatrix();
 	std::vector<Pixel> getNeighboor(int x, int y);
 
-	void factorSize(int size){
+	void factorSize(float size){
 		_width*=size;
 		_height*=size;
 	}

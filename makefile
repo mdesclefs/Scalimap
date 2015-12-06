@@ -14,7 +14,7 @@ BUILDDIR:= build/
 SRCDIR:= src/
 TESTDIR:= test/
 
-FILE:= main.o Pixel.o Image.o ScalingAlgorithm.o ScalingUp.o
+FILE:= main.o Utils.o Pixel.o Image.o ScalingAlgorithm.o ScalingUp.o ScalingDown.o
 OBJ:= $(addprefix $(BUILDDIR), $(FILE)) 
 
 TESTFILE:= ScalingUpTest.o

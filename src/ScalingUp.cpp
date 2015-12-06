@@ -29,28 +29,15 @@ ScalingUp::~ScalingUp() {
 	// TODO Auto-generated destructor stub
 }
 
-void ScalingUp::algorithm(float factor){
-
-	std::vector<std::vector<Pixel>> *newMatrix = new std::vector<std::vector<Pixel>>(this->_image->getHeight() * factor);
-
-	for ( int i = 0 ; i < this->_image->getHeight() * factor ; i++ )
-	   (*newMatrix)[i].resize(this->_image->getWidth() * factor);
-
-	for(int y=0; y < this->_image->getHeight(); ++y){
-		for(int x=0; x < this->_image->getWidth(); ++x){
-			if(factor == 2){
-				this->epx(newMatrix, x, y);
-			}else{
-				this->advMAME3x(newMatrix, x, y);
-			}
-		}
+void ScalingUp::chooseMethod(std::vector<std::vector<Pixel>> *& matrix, float factor, int x, int y){
+	if(factor == 2){
+		this->epx(matrix, x, y);
+	}else{
+		this->advMAME3x(matrix, x, y);
 	}
-
-	this->_image->factorSize(factor);
-	this->_image->setMatrix(newMatrix);
 }
 
-void ScalingUp::epx(std::vector<std::vector<Pixel>>* matrix, int x, int y){
+void ScalingUp::epx(std::vector<std::vector<Pixel>>*& matrix, int x, int y){
 	// Implementation of EPX Algorithm Scaling by factor of two
 	//		A				K	L
 	//C		P		B		M	N
@@ -127,7 +114,7 @@ bool ScalingUp::threeOrMoreEqual(Pixel A, Pixel B, Pixel C, Pixel D){
 	return false;
 }
 
-void ScalingUp::advMAME3x(std::vector<std::vector<Pixel>>* matrix, int _x, int _y){
+void ScalingUp::advMAME3x(std::vector<std::vector<Pixel>>*& matrix, int _x, int _y){
 
 	std::vector<Pixel> neighboor;
 	neighboor =  this->_image->getNeighboor(_x, _y);

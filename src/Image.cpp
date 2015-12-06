@@ -6,7 +6,7 @@
  */
 
 #include "Image.h"
-#include "Utils.cpp"
+#include "Utils.h"
 #include <math.h>
 
 #include <iostream>
@@ -61,9 +61,12 @@ void Image::loadFromFile(){
 				int rColor, gColor, bColor;
 
 				tmpBinary = splittedLine[x*3];
-
 				rColor = convertBinaryToDecimal(tmpBinary);
+
+				tmpBinary = splittedLine[(x*3)+1];
 				gColor = convertBinaryToDecimal(tmpBinary);
+
+				tmpBinary = splittedLine[(x*3)+2];
 				bColor = convertBinaryToDecimal(tmpBinary);
 
 				px.setColor(rColor, gColor, bColor);
@@ -89,7 +92,23 @@ void Image::printMatrix(){
 }
 
 Pixel Image::getPixel(int x, int y){
+	if(x < 0)
+		x = 0;
+	if(x >= _width)
+		x = _width-1;
+	if(y < 0)
+		y = 0;
+	if(y >= _height)
+		y = _height-1;
+
 	return (_matrix.at(y)).at(x);
+}
+
+bool Image::isInMatrix(int x, int y){
+	if ((0 <= x && x < _width) && (0 <= y && y < _height)){
+		return true;
+	}
+	return false;
 }
 
 void Image::setMatrix(std::vector<std::vector<Pixel>>*& matrix){
