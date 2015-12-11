@@ -20,8 +20,8 @@ public:
 	virtual ~ScalingAlgorithm();
 
 	void algorithm(float factor);
-	virtual void chooseMethod(std::vector<std::vector<Pixel>>*& matrix, float factor, int x, int y) = 0;
-	void run(float factor);
+	virtual void chooseMethod(std::vector<std::vector<Pixel*>>*& matrix, float factor, int x, int y) = 0;
+	virtual void run(float factor);
 };
 
 #endif /* SRC_SCALINGALGORITHM_H_ */

@@ -25,16 +25,21 @@ ScalingAlgorithm::~ScalingAlgorithm() {
 }
 
 void ScalingAlgorithm::algorithm(float factor){
-	std::vector<std::vector<Pixel>> *newMatrix = new std::vector<std::vector<Pixel>>(this->_image->getHeight() * factor);
+	int newHeight = floor((this->_image->getHeight() * factor));
+	int newWidth = floor((this->_image->getWidth() * factor));
 
-	for ( int i = 0 ; i < this->_image->getHeight() * factor ; i++ )
-	   (*newMatrix)[i].resize(this->_image->getWidth() * factor);
+	std::vector<std::vector<Pixel*>> *newMatrix = new std::vector<std::vector<Pixel*>>(newHeight);
+	for ( int i = 0 ; i < newHeight ; i++ )
+	   (*newMatrix)[i].resize(newWidth);
 
-	float translate = ceil(1 / factor);
+	float trans = 1;
+	if(factor < 1){
+		trans = factor;
+	}
 
-	for(int y=0; y < this->_image->getHeight(); y+=translate){
-		for(int x=0; x < this->_image->getWidth(); x+=translate){
-			this->chooseMethod(newMatrix, factor, x, y);
+	for(int y=0; y < floor((this->_image->getHeight() * trans)); ++y){
+		for(int x=0; x < floor((this->_image->getWidth() * trans)); ++x){
+ 			this->chooseMethod(newMatrix, factor, x, y);
 		}
 	}
 

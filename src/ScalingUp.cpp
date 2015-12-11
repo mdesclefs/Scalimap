@@ -29,7 +29,11 @@ ScalingUp::~ScalingUp() {
 	// TODO Auto-generated destructor stub
 }
 
-void ScalingUp::chooseMethod(std::vector<std::vector<Pixel>> *& matrix, float factor, int x, int y){
+void ScalingUp::chooseMethod(std::vector<std::vector<Pixel*>> *& matrix, float factor, int x, int y){
+	int translate = ceil(1 / factor);
+	x*=translate;
+	y*=translate;
+
 	if(factor == 2){
 		this->epx(matrix, x, y);
 	}else{
@@ -37,7 +41,7 @@ void ScalingUp::chooseMethod(std::vector<std::vector<Pixel>> *& matrix, float fa
 	}
 }
 
-void ScalingUp::epx(std::vector<std::vector<Pixel>>*& matrix, int x, int y){
+void ScalingUp::epx(std::vector<std::vector<Pixel*>>*& matrix, int x, int y){
 	// Implementation of EPX Algorithm Scaling by factor of two
 	//		A				K	L
 	//C		P		B		M	N
@@ -54,15 +58,15 @@ void ScalingUp::epx(std::vector<std::vector<Pixel>>*& matrix, int x, int y){
 	 * If (A, B, C, D) three or more are identical then K=L=M=N=P
 	 */
 
-	std::vector<Pixel> neighboor;
+	std::vector<Pixel*> neighboor;
 	neighboor =  this->_image->getNeighboor(x, y);
-	Pixel a, b, c, d;
+	Pixel* a,* b,* c,* d;
 	a = neighboor[1];
 	b = neighboor[4];
 	c = neighboor[3];
 	d = neighboor[6];
 
-	Pixel p, k, l, m, n;
+	Pixel* p,* k,* l,* m,* n;
 	p = this->_image->getPixel(x, y);
 
 	k=p;
@@ -71,16 +75,16 @@ void ScalingUp::epx(std::vector<std::vector<Pixel>>*& matrix, int x, int y){
 	n=p;
 
 	// C==A
-	if(c == a)
+	if(*c == *a)
 		k=a;
 	// A==B
-	if(a == b)
+	if(*a == *b)
 		l=b;
 	// B==D
-	if(b == d)
+	if(*b == *d)
 		n=d;
 	// D==C
-	if(d == c)
+	if(*d == *c)
 		m=c;
 
 	if(threeOrMoreEqual(a, b, c, d)){
@@ -99,27 +103,27 @@ void ScalingUp::epx(std::vector<std::vector<Pixel>>*& matrix, int x, int y){
 	(*matrix)[newY+1][newX+1] = n;
 }
 
-bool ScalingUp::threeOrMoreEqual(Pixel A, Pixel B, Pixel C, Pixel D){
-	if(A == B && B == C && C == D) // A = B = C = D
+bool ScalingUp::threeOrMoreEqual(Pixel*& A, Pixel*& B, Pixel*& C, Pixel*& D){
+	if(*A == *B && *B == *C && *C == *D) // A = B = C = D
 		return true;
-	if(A == B && B == C && C != D) // A = B = C != D
+	if(*A == *B && *B == *C && *C != *D) // A = B = C != D
 		return true;
-	if(A == B && B == D && C != D) // A = B = D != C
+	if(*A == *B && *B == *D && *C != *D) // A = B = D != C
 		return true;
-	if(A == C && C == D && C != B) // A = C = D != B
+	if(*A == *C && *C == *D && *C != *B) // A = C = D != B
 		return true;
-	if(B == C && C == D && A != D) // B = C = D != A
+	if(*B == *C && *C == *D && *A != *D) // B = C = D != A
 		return true;
 
 	return false;
 }
 
-void ScalingUp::advMAME3x(std::vector<std::vector<Pixel>>*& matrix, int _x, int _y){
+void ScalingUp::advMAME3x(std::vector<std::vector<Pixel*>>*& matrix, int _x, int _y){
 
-	std::vector<Pixel> neighboor;
+	std::vector<Pixel*> neighboor;
 	neighboor =  this->_image->getNeighboor(_x, _y);
 
-	Pixel a, b, c, d, e, f, g, h, i;
+	Pixel* a,* b,* c,* d,* e,* f,* g,* h,* i;
 	e = this->_image->getPixel(_x, _y);
 	a = neighboor[0];
 	b = neighboor[1];
@@ -131,7 +135,7 @@ void ScalingUp::advMAME3x(std::vector<std::vector<Pixel>>*& matrix, int _x, int 
 	i = neighboor[7];
 
 	//R=S=T=U=V=W=X=Y=Z=E;
-	Pixel r, s, t, u, v, w, x, y, z;
+	Pixel* r,* s,* t,* u,* v,* w,* x,* y,* z;
 	r = e;
 	s = e;
 	t = e;

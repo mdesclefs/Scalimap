@@ -21,6 +21,23 @@ public:
 	std::vector<int> getColor() const;
 	void setColor(int rColor, int gColor, int bColor);
 
+	void toFile(std::string*& colorToString);
+	void toFile(std::string*& colorToString, int bitSize);
+
+	int& operator[] (int index){
+		if(0 <= index && index < 3){
+			return _color[index];
+		}
+		return _color[0];
+	}
+
+	int operator[] (int index) const{
+		if(0 <= index && index < 3){
+			return _color[index];
+		}
+		return _color[0];
+	}
+
 	friend bool operator==(const Pixel& lp, const Pixel& rp){
 		std::vector<int> lColor, rColor;
 

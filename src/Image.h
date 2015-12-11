@@ -9,35 +9,64 @@
 
 #include <string>
 #include <vector>
+#include <math.h>
 #include "Pixel.h"
+
 
 class Image {
 private:
 	std::string _filename;
-	std::vector<std::vector<Pixel>> _matrix;
+	std::vector<std::vector<Pixel*>> _matrix;
 	std::string _magicNumber;
+
 	int _width = 0;
 	int _height = 0;
+	std::vector<int> _widthSlice;
+	std::vector<int> _heightSlice;
+
 	int _maxColorValue = 0;
+
+    //std::vector<std::vector<int, int>> _slices;
 
 public:
 	Image(std::string filename);
+	Image(int* sliceSize, int** intMatrix);
 	virtual ~Image();
 
 	void loadFromFile();
+	void saveInFile(std::string& method, int factor);
 	void printMatrix();
 
-	Pixel getPixel(int x, int y);
+	//Pixel getPixel(int x, int y);
+	Pixel*& getPixel(int x, int y);
 	bool isInMatrix(int x, int y);
 
-	void setMatrix(std::vector<std::vector<Pixel>>*& matrix);
-	std::vector<std::vector<Pixel>> getMatrix();
-	std::vector<Pixel> getNeighboor(int x, int y);
+	void resetMatrix();
+	void setMatrix(std::vector<std::vector<Pixel*>>*& matrix);
+	std::vector<std::vector<Pixel*>> getMatrix();
+	int** getMatrixToSend();
+	int** initMatrixInRange(int xStart, int yStart, int xOffset, int yOffset);
+	std::vector<Pixel*> getNeighboor(int x, int y);
+
+	void updateSlice(int sliceNumber, int** slice);
+	void setSlice(int procNbr);
+	int** getSlice(int sliceNumber);
+	int getSliceSize(int sliceNumber);
+	int* getSliceDimensions(int sliceNumber);
+	int* getSlicePosition(int sliceNumber);
 
 	void factorSize(float size){
-		_width*=size;
-		_height*=size;
+		_width= ceil(_width * size);
+		_height= ceil(_height * size);
+
+		for(int i=0; i < _widthSlice.size(); ++i){
+			std::cout << "OLDVALUES" << _widthSlice[i] << ";" << _heightSlice[i] << std::endl;
+			_widthSlice[i] = ceil(_widthSlice[i]*size);
+			_heightSlice[i] = ceil(_heightSlice[i]*size);
+			std::cout << "NEWVALUES" << _widthSlice[i] << ";" << _heightSlice[i] << std::endl;
+		}
 	}
+
 
 	int getWidth(){
 		return _width;
@@ -45,6 +74,11 @@ public:
 
 	int getHeight(){
 		return _height;
+	}
+
+	int getMaxBitsColor(){
+		//return (log(_maxColorValue)/log(2.0));
+		return (ceil(log(_maxColorValue) / log(2)) / 8);
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const Image& image)

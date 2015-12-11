@@ -17,8 +17,9 @@ public:
 	ScalingDown(Image * const image);
 	virtual ~ScalingDown();
 
-	void chooseMethod(std::vector<std::vector<Pixel>>*&  matrix, float factor, int x, int y);
-	void divide(std::vector<std::vector<Pixel>>*& matrix, float factor, int x, int y);
+	void chooseMethod(std::vector<std::vector<Pixel*>>*&  matrix, float factor, int x, int y);
+	void divide(std::vector<std::vector<Pixel*>>*& matrix, float factor, int x, int y);
+	void run(float factor) override;
 };
 
 #endif /* SRC_SCALINGDOWN_H_ */
