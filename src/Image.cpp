@@ -13,6 +13,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <bitset>
+#include <string>
 
 Image::Image(std::string filename) {
 	// TODO Auto-generated constructor stub
@@ -31,6 +33,7 @@ Image::Image(int* sliceSize, int** intMatrix){
 	for(int y=0; y < _height; ++y){
 		//Read matrix rows
 		std::vector<Pixel*> matrixLine;
+
 		for(int x=0; x < _width; ++x){
 			Pixel *px = new Pixel(0,0,0);
 			px->setColor(intMatrix[y][(x*3)], intMatrix[y][(x*3)+1], intMatrix[y][(x*3)+2]);
@@ -108,30 +111,21 @@ void Image::loadFromFile(){
 void Image::saveInFile(std::string& method, int factor){
 
 	std::string newFileName = _filename.substr(0, _filename.size()-4);
-	newFileName+="_" + method +"_" + std::to_string(factor)+".ppm";
+	newFileName+="_" + method +"_" + std::to_string(static_cast<long long>(factor))+".ppm";
 
 	std::ofstream newfile;
-	newfile.open(newFileName,std::ios::out | std::ios::binary);
+	newfile.open(newFileName,std::ios::out);
 	newfile << "P6\n";
-	newfile	<< (std::to_string(_width)) << " " << (std::to_string(_height)) << "\n";
-	newfile	<< (std::to_string(_maxColorValue)) << "\n";
+	newfile	<< (std::to_string(static_cast<long long>(_width))) << " " << (std::to_string(static_cast<long long>(_height))) << "\n";
+	newfile	<< (std::to_string(static_cast<long long>(_maxColorValue))) << "\n";
 
-	std::cout << _width << ";" << _height << std::endl;
 	for(int y=0; y < _height; ++y){
 		for(int x=0; x < _width; ++x){
-			//std::cout << x << ";" << y << std::endl;
 			newfile.write((char*) &(*(this->getPixel(x, y)))[0], this->getMaxBitsColor());
 			newfile.write((char*) &(*(this->getPixel(x, y)))[1], this->getMaxBitsColor());
 			newfile.write((char*) &(*(this->getPixel(x, y)))[2], this->getMaxBitsColor());
 		}
-		newfile << "\n";
 	}
-
-	//newfile.write((char*) (this->getMatrixToSend()), _width*_height*3*this->getMaxBitsColor());
-
-
-	/*size_t size = _width * _height * 3;
-	newfile.write((char*) this->getMatrixToSend(), size);*/
 
 	newfile.close();
 }
@@ -139,7 +133,7 @@ void Image::saveInFile(std::string& method, int factor){
 void Image::printMatrix(){
 	for(int y=0; y < _height; ++y){
 		for(int x=0; x < _width; ++x){
-			std::cout << *_matrix[y][x] << "\t\t\t";
+			std::cout << *(_matrix[y][x]) << "\t\t\t";
 		}
 		std::cout << std::endl;
 	}
@@ -159,7 +153,7 @@ Pixel*& Image::getPixel(int x, int y){
 }
 
 bool Image::isInMatrix(int x, int y){
-	if ((0 <= x && x < _width) && (0 <= y && y < _height)){
+	if ((0 <= x && x < (_matrix[0]).size()) && (0 <= y && y < (_matrix.size()))){
 		return true;
 	}
 	return false;
@@ -186,17 +180,16 @@ int** Image::getMatrixToSend(){
 }
 
 int** Image::initMatrixInRange(int xStart, int yStart, int xOffset, int yOffset){
-	xOffset *= 3;
-	int *row = (int *)malloc(xOffset*yOffset*sizeof(int));
-	int **sliceMatrix = (int **)malloc(yOffset*sizeof(int*));
+	int **sliceMatrix = (int **) malloc(yOffset*sizeof(int*));
+	int *row = (int *) malloc(3*xOffset*yOffset*sizeof(int));
 
-	std::cout << xStart << "->" << xOffset << std::endl;
-	std::cout << yStart << "->" << yOffset << std::endl;
 
-	for (int y=0; y<yOffset; ++y){
-		sliceMatrix[y] = &(row[y*xOffset]);
+	for (int y=0; y < yOffset; ++y){
+		sliceMatrix[y] = &(row[3*xOffset*y]);
 		//We need to add 3 to x on each iteration cause of the 3 colors assignations
-		for(int x=0; x<(xOffset/3); ++x){
+		for(int x=0; x < xOffset; ++x){
+			//We begin at [xStart, yStart] going to [xStart + xOffset, yStart + yOffset]
+
 			Pixel* tmp = getPixel(xStart+x, yStart+y);
 
 			sliceMatrix[y][(x*3)] = (*tmp)[0];
@@ -246,9 +239,6 @@ void Image::updateSlice(int sliceNumber, int** slice){
 	int* position = this->getSlicePosition(sliceNumber);
 	int* dimension = this->getSliceDimensions(sliceNumber);
 
-	std::cout << "POSITION = " << position[0] << ";" << position[1] << std::endl;
-	std::cout << "DIMENSION = " << dimension[0] << ";" << dimension[1] << std::endl;
-
 	for(int y=0; y<dimension[1]; ++y){
 		for(int x=0; x<dimension[0]; ++x){
 			//std::cout << "echo" << std::endl;
@@ -266,34 +256,27 @@ void Image::updateSlice(int sliceNumber, int** slice){
 void Image::setSlice(int procNbr){
 
 	for(int i=0; i<procNbr; ++i){
-		if(i == procNbr-1 && i != 0 && (_widthSlice[0] * procNbr) < _width){
-			_widthSlice.push_back((_width / procNbr));
+		if(i == procNbr-1){
+			//_widthSlice.push_back((_width / procNbr));
 			//Add remaining cells
-			_widthSlice[i] += (_width - (_widthSlice[i] * procNbr));
+			//_widthSlice[i] += (_width - (_widthSlice[i] * procNbr));
+			_widthSlice.push_back(_width - ((procNbr-1) * floor(_width/procNbr)) );
 		}else{
-			_widthSlice.push_back(_width / procNbr);
+			_widthSlice.push_back(floor(_width / procNbr));
 		}
 	}
 
+	//Height stay the same
 	for(int i=0; i<procNbr; ++i){
 		_heightSlice.push_back(_height);
-		/*
-		if(i == procNbr-1 && i != 0 && (_heightSlice[0] * procNbr) < _height){
-			_heightSlice.push_back(_height / procNbr);
-			//Add remaining cells
-			_heightSlice[i] += (_height - (_heightSlice[i] * procNbr));
-		}else{
-			_heightSlice.push_back(_height / procNbr);
-		}
-		*/
 	}
 }
 
 int** Image::getSlice(int sliceNumber){
-	std::cout << "Slice : " << sliceNumber << std::endl;
-	std::cout << (getSlicePosition(sliceNumber))[0] << "=" << (getSlicePosition(sliceNumber))[1] << "=" << (getSliceDimensions(sliceNumber))[0] << "=" << (getSliceDimensions(sliceNumber))[1] << std::endl;
-
-	int **sliceMatrix = this->initMatrixInRange((getSlicePosition(sliceNumber))[0], (getSlicePosition(sliceNumber))[1], (getSliceDimensions(sliceNumber))[0],  (getSliceDimensions(sliceNumber))[1]);
+	int **sliceMatrix = this->initMatrixInRange((getSlicePosition(sliceNumber))[0], \
+												(getSlicePosition(sliceNumber))[1], \
+												(getSliceDimensions(sliceNumber))[0], \
+												(getSliceDimensions(sliceNumber))[1]);
 	return sliceMatrix;
 }
 
@@ -311,12 +294,17 @@ int* Image::getSliceDimensions(int sliceNumber){
 
 int* Image::getSlicePosition(int sliceNumber){
 	int* position = new int[2];
-	position[0] = 0;
-	position[1] = 0;
-	for(int i=0; i < sliceNumber;++i){
+
+	position[1] = 0; // We keep the same height
+	if(sliceNumber == 0)
+		position[0] = 0;
+	else
+		position[0] = getSlicePosition(sliceNumber-1)[0] + _widthSlice[sliceNumber-1];
+
+	/*for(int i=0; i < sliceNumber;++i){
 		position[0] += _widthSlice[i];
 		//position[1] += _heightSlice[i]; //We divide in same height submatrixes
-	}
+	}*/
 
 	return position;
 }

@@ -15,7 +15,7 @@ ScaliException::ScaliException() {
 
 }
 
-ScaliException::~ScaliException() {
+ScaliException::~ScaliException() throw(){
 	// TODO Auto-generated destructor stub
 }
 

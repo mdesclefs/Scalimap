@@ -21,6 +21,7 @@ public:
 
 	void algorithm(float factor);
 	virtual void chooseMethod(std::vector<std::vector<Pixel*>>*& matrix, float factor, int x, int y) = 0;
+	//virtual void chooseMethod(float factor, int x, int y) = 0;
 	virtual void run(float factor);
 };
 

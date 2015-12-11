@@ -3,9 +3,9 @@
 
 #CXX=mpiCC #Linux
 CXX=mpic++ #OS X
-#CXX = g++
+#CXX = g++-4.5
 #CFLAGS=-W -Wall -ansi -pedantic -std=c++0x
-CFLAGS= -Wall -ansi -pedantic -std=c++0x
+CFLAGS=-W -Wall -ansi -pedantic -std=c++0x
 LDFLAGS=
 
 MPI_COMPILE_FLAGS = $(shell mpicc --showme:compile)
@@ -31,7 +31,7 @@ $(EXEC): $(OBJ)
 	$(CXX) $^ -o $(EXEC) $(LDFLAGS)
 
 $(BUILDDIR)%.o: $(SRCDIR)%.cpp
-	$(CXX) $(MPI_COMPILE_FLAGS) -c $< $(MPI_LINK_FLAGS) -o $@ $(CFLAGS)
+	$(CXX) $(CFLAGS) -c $< $(MPI_LINK_FLAGS) -o $@
 	
 	
 #test: //$(EXECTEST)

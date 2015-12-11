@@ -17,7 +17,7 @@ public:
 	static ScaliException* Exception;
 	static const char* exceptionMessage;
 	ScaliException();
-	virtual ~ScaliException();
+	virtual ~ScaliException() throw();
 
 	static ScaliException*& ArgumentFailure(){
 		exceptionMessage = "Launching command has to be like this : ./Scalimap <image_filename> <option> <factor>";
@@ -43,6 +43,12 @@ public:
 		exceptionMessage = "The Subimage you are trying to load is empty.";
 		return Exception;
 	}
+
+	static ScaliException*& MultipleTwoThree(){
+		exceptionMessage = "The factor must be a multiple of two and/or three.";
+		return Exception;
+	}
+
 
 	virtual const char* what() const throw(){
 		return exceptionMessage;

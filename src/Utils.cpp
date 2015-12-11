@@ -8,8 +8,10 @@
 #include "Utils.h"
 #include "ScalingUp.h"
 #include "ScalingDown.h"
+#include "ScaliException.h"
 #include <sstream>
 #include <math.h>
+#include <algorithm>
 
 std::vector<std::string> Utils::split(const std::string& string, char delimiter)
 {
@@ -80,7 +82,7 @@ Pixel* Utils::getAverage(std::vector<Pixel*> &pixelList){
 
 		return pixelList[0];
 	}
-	return nullptr;
+	return 0;
 }
 
 int** Utils::initMatrixToSend(int width, int height){
@@ -109,4 +111,32 @@ float Utils::getFactor(std::string method, int factor){
 		newFactor = 1.0/ newFactor;
 
 	return newFactor;
+}
+
+bool Utils::isInteger(float value){
+	return value == floor(value);
+}
+
+int* Utils::decomposeFactor(float factor){
+	int* twoTreeFactor = new int[2];
+	while(factor > 1 && Utils::isInteger(factor)){
+		factor/=3;
+		twoTreeFactor[1]+=1;
+	}
+
+	if(!Utils::isInteger(factor)){
+		factor*=3;
+		twoTreeFactor[1]-=1;
+	}
+
+	while(factor > 1 && Utils::isInteger(factor)){
+		factor/=2;
+		twoTreeFactor[0]+=1;
+	}
+
+	if(!Utils::isInteger(factor)){
+		throw ScaliException::MultipleTwoThree();
+	}
+
+	return twoTreeFactor;
 }

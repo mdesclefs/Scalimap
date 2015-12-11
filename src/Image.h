@@ -19,12 +19,12 @@ private:
 	std::vector<std::vector<Pixel*>> _matrix;
 	std::string _magicNumber;
 
-	int _width = 0;
-	int _height = 0;
+	int _width;
+	int _height;
 	std::vector<int> _widthSlice;
 	std::vector<int> _heightSlice;
 
-	int _maxColorValue = 0;
+	int _maxColorValue;
 
     //std::vector<std::vector<int, int>> _slices;
 
@@ -56,14 +56,19 @@ public:
 	int* getSlicePosition(int sliceNumber);
 
 	void factorSize(float size){
-		_width= ceil(_width * size);
-		_height= ceil(_height * size);
+		if(_widthSlice.size() == 0){
+			_width= floor(_width * size);
+			_height= floor(_height * size);
+		}else{
+			_width= 0;
+			_height= 0;
+			for(int i=0; i < (int) _widthSlice.size(); ++i){
+				_widthSlice[i] = floor(_widthSlice[i]*size);
+				_heightSlice[i] = floor(_heightSlice[i]*size);
 
-		for(int i=0; i < _widthSlice.size(); ++i){
-			std::cout << "OLDVALUES" << _widthSlice[i] << ";" << _heightSlice[i] << std::endl;
-			_widthSlice[i] = ceil(_widthSlice[i]*size);
-			_heightSlice[i] = ceil(_heightSlice[i]*size);
-			std::cout << "NEWVALUES" << _widthSlice[i] << ";" << _heightSlice[i] << std::endl;
+				_width += _widthSlice[i];
+				_height = _heightSlice[i];
+			}
 		}
 	}
 

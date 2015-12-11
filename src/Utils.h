@@ -23,6 +23,8 @@ public:
 	static int** initMatrixToSend(int width, int height);
 	static ScalingAlgorithm* chooseAlgorithm(std::string method, Image*& subImage);
 	static float getFactor(std::string method, int factor);
+	static bool isInteger(float value);
+	static int* decomposeFactor(float factor);
 };
 
 #endif /* SRC_UTILS_H_ */

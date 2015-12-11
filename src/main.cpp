@@ -19,7 +19,8 @@ int main(int argc, char **argv){
 		char name[MPI_MAX_PROCESSOR_NAME];
 
 		MPI_Init(&argc, &argv);
-		double procStartingTime = MPI_Wtime();
+		double startingTime, procTime;
+		startingTime = MPI_Wtime();
 		MPI_Comm_rank(MPI_COMM_WORLD, &PROCESS_ID);
 		MPI_Comm_size(MPI_COMM_WORLD, &NB_PROCESS);
 		MPI_Get_processor_name(name, &len);
@@ -43,33 +44,49 @@ int main(int argc, char **argv){
 			throw ScaliException::NullFactor();
 		}
 
-		std::vector<std::string> array;
-		array.push_back("U");
-		array.push_back("u");
-		array.push_back("D");
-		array.push_back("d");
-		if (std::find(array.begin(), array.end(), method) == array.end()){
+		int* scalingRun = new int[2];
+		bool multipleRun = false;
+		if(factor != 2 && factor != 3){
+			scalingRun = Utils::decomposeFactor(factor);
+			multipleRun = true;
+		}
+
+		if (!(method == "U" || method == "u" || method == "d" || method == "D")){
 			throw ScaliException::MethodArgument();
 		}
 
 		int **slicedMatrix;
 		int *sliceSize = new int[2];
+		double* execution = new double[1];
 		MPI_Status status;
 		if(NB_PROCESS == 1){
 			Image* img = new Image("../images/"+filename);
-			std::cout << "Loading from file" << std::endl;
+			std::cout << "One process execution" << std::endl;
 			img->loadFromFile();
 
 			ScalingAlgorithm* scaling = Utils::chooseAlgorithm(method, img);
 			std::cout << "Applying scaling" << std::endl;
-			scaling->run(factor);
+
+			if(!multipleRun){
+				scaling->run(factor);
+			}else{
+				for(int i=0; i < scalingRun[0]; ++i){
+					scaling->run(2);
+				}
+				for(int i=0; i < scalingRun[1]; ++i){
+					scaling->run(3);
+				}
+			}
 
 			std::cout << "Saving from file" << std::endl;
 			img->saveInFile(method, factor);
 			//img->printMatrix();
 		}else{
+
+			/*
+			 * MASTER
+			 */
 			if(PROCESS_ID == 0){
-				std::cout << "Master" << std::endl;
 				//Load image
 				Image* img = new Image("../images/"+filename);
 				img->loadFromFile();
@@ -80,7 +97,6 @@ int main(int argc, char **argv){
 					//Assign size values and sending them to procs;
 					sliceSize[0] = img->getSliceDimensions(p)[0];
 					sliceSize[1] = img->getSliceDimensions(p)[1];
-					//sliceSize[2] = img->getSliceSize(p);
 					MPI_Send(sliceSize, 2, MPI_INT, p, 0, MPI_COMM_WORLD);
 
 					slicedMatrix = img->getSlice(p);
@@ -91,23 +107,34 @@ int main(int argc, char **argv){
 				}
 
 
+				//Init time
+				procTime = MPI_Wtime();
+
 				slicedMatrix = img->getSlice(0);
-				Image* subImage = new Image(sliceSize, slicedMatrix);
+				Image* subImage = new Image(img->getSliceDimensions(0), slicedMatrix);
+
 				//Scaling part
 				ScalingAlgorithm* scaling = Utils::chooseAlgorithm(method, subImage);
-				std::cout << "iciciic" << std::endl;
-				scaling->run(factor);
+				if(!multipleRun){
+					scaling->run(factor);
+				}else{
+					for(int i=0; i < scalingRun[0]; ++i){
+						scaling->run(2);
+					}
+					for(int i=0; i < scalingRun[1]; ++i){
+						scaling->run(3);
+					}
+				}
 				// End Scalling Part
-				std::cout << "iciciic" << std::endl;
+
+				//End time
+				execution[0] = MPI_Wtime() - procTime;
+
+
 				slicedMatrix = subImage->getMatrixToSend();
 				img->factorSize(Utils::getFactor(method, factor));
 				img->resetMatrix();
-				std::cout << "icicicici" << std::endl;
 				img->updateSlice(0, slicedMatrix);
-				std::cout << "okkok" << std::endl;
-
-				free(slicedMatrix[0]);
-				free(slicedMatrix);
 
 				//Receiving new matrixes
 				for(int p=1; p < NB_PROCESS; ++p){
@@ -124,26 +151,62 @@ int main(int argc, char **argv){
 					free(slicedMatrix);
 				}
 
+
 				img->saveInFile(method, factor);
+
+				/*
+				 * =============== Time Execution
+				 */
+				std::cout << "Process 1 : " << execution[0] << " sec" << std::endl;
+
+				for(int p=1; p < NB_PROCESS; ++p){
+					//Receiving size information : width, height, totalSize
+					MPI_Recv(execution, 2, MPI_INT, p, 0, MPI_COMM_WORLD, &status);
+					std::cout << "Process " << p+1 << " : " << execution[0] << " sec" << std::endl;
+				}
+				execution[0] = MPI_Wtime() - startingTime;
+				std::cout << "Total time : " << execution[0] << " sec" << std::endl;
+				/*
+				 * =============== Time Execution
+				 */
 			}else{
+				/*
+				 * SLAVE
+				 */
 				//Receiving size information : width, height, totalSize
 				MPI_Recv(sliceSize, 2, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 
 				slicedMatrix = Utils::initMatrixToSend(sliceSize[0], sliceSize[1]);
 				MPI_Recv(&(slicedMatrix[0][0]),  sliceSize[0]*sliceSize[1]*3, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 
+				//Init time
+				procTime = MPI_Wtime();
+
 				Image* subImage = new Image(sliceSize, slicedMatrix);
 
 				// Scalling Part
 				ScalingAlgorithm* scaling = Utils::chooseAlgorithm(method, subImage);
-				std::cout << "ici OKLM ?" << std::endl;
-				scaling->run(factor);
+				if(!multipleRun){
+					scaling->run(factor);
+				}else{
+					for(int i=0; i < scalingRun[0]; ++i){
+						scaling->run(2);
+					}
+					for(int i=0; i < scalingRun[1]; ++i){
+						scaling->run(3);
+					}
+				}
+
 				// End Scalling Part
+
+				//End time
+				execution[0] = MPI_Wtime() - procTime;
 
 				//New size and sending them to master;
 				sliceSize[0] = subImage->getWidth();
 				sliceSize[1] = subImage->getHeight();
 				MPI_Send(sliceSize, 2, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
 
 				//New matrix and sending it to master;
 				slicedMatrix = subImage->getMatrixToSend();
@@ -153,6 +216,7 @@ int main(int argc, char **argv){
 				free(slicedMatrix[0]);
 				free(slicedMatrix);
 
+				MPI_Send(execution, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 			}
 		}
 		MPI_Finalize();

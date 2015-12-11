@@ -6,7 +6,6 @@
  */
 
 #include "ScalingUp.h"
-
 #include <iostream>
 #include <vector>
 
